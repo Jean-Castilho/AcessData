@@ -9,13 +9,6 @@ const router = express.Router();
 
 const productsController = new ProductsControllers();
 
-const {
-  getProductById,
-  getProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-} = productsController;
 
 router.post("/upload", upload.single("file"), async (req, res) => {
   if (!req.file) {

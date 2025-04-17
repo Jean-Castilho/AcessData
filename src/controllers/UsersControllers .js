@@ -24,13 +24,10 @@ export default class UsersControllers {
     }
   }
 
-  async getUsers(req, res) {
-    try {
+  async getUsers() {
       const users = await this.users.find().toArray();
       return users;
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
-    }
+    
   }
 
   async createUser(req, res) {

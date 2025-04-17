@@ -5,13 +5,11 @@ const router = express.Router();
 
 const usersController = new UsersControllers();
 
-const { getUserById, getUsers, createUser, updateUser, deleteUser } =
-  usersController;
 
 router.get("/getUserById/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await getUserById(id);
+    const user = await usersController.getUserById(id);
 
     if (!user) {
       return res.status(404).json({ message: "Useruario nao encontrado" });
@@ -25,7 +23,7 @@ router.get("/getUserById/:id", async (req, res) => {
 
 router.get("/getUsers", async (req, res) => {
   try {
-    const users = await getUsers();
+    const users = await usersController.getUsers();
     return res.status(200).json(users);
   } catch (error) {
     return res.status(500).json({ message: "Erro ao obter usuario" });
@@ -34,7 +32,7 @@ router.get("/getUsers", async (req, res) => {
 
 router.post("/createUser", async (req, res) => {
   try {
-    const newUser = await createUser(req, res);
+    const newUser = await usersController.createUser(req, res);
     return res.status(201).json(newUser);
   } catch (error) {
     return res.status(500).json({ message: "Erro ao criar usuario" });
@@ -46,7 +44,7 @@ router.put("/updateUser/:id", async (req, res) => {
     const { id } = req.params;
     const { name, number, email, password } = req.body;
     const updatedUser = { name, number, email, password };
-    const result = await updateUser(id, updatedUser);
+    const result = await usersController.updateUser(id, updatedUser);
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ message: "User nao encontrado" });
@@ -61,7 +59,7 @@ router.put("/updateUser/:id", async (req, res) => {
 router.delete("/deleteUser/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await deleteUser(id);
+    const result = await usersController.deleteUser(id);
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "Usuario deletado" });
