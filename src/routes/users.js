@@ -5,15 +5,10 @@ const router = express.Router();
 
 const usersController = new UsersControllers();
 
-
 router.get("/getUserById/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const user = await usersController.getUserById(id);
-
-    if (!user) {
-      return res.status(404).json({ message: "Useruario nao encontrado" });
-    }
 
     return res.status(200).json(user);
   } catch (error) {
@@ -32,7 +27,15 @@ router.get("/getUsers", async (req, res) => {
 
 router.post("/createUser", async (req, res) => {
   try {
-    const newUser = await usersController.createUser(req, res);
+    const { name, number, email, password } = req.body;
+
+    const dataUser = {
+      name,
+      number,
+      email,
+      password,
+    };
+    const newUser = await usersController.createUser(dataUser);
     return res.status(201).json(newUser);
   } catch (error) {
     return res.status(500).json({ message: "Erro ao criar usuario" });
@@ -62,10 +65,10 @@ router.delete("/deleteUser/:id", async (req, res) => {
     const result = await usersController.deleteUser(id);
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "Usuario deletado" });
+      return res.status(404).json({ message: "Usuario nao foi encontrado" });
     }
 
-    return res.status(200).json({ message: "Useuario deletado" });
+    return res.status(200).json({ message: "Usuario deletado" });
   } catch (error) {
     return res.status(500).json({ message: "Error ao deletar usuario" });
   }
