@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { ObjectId } from "mongodb";
 import { getDataBase } from "../config/db.js";
 
 dotenv.config();
@@ -12,7 +13,12 @@ export default class UsersControllers {
   }
 
   async getUserById(id) {
-    const user = await this.users.findOne({ _id: id });
+    if(!ObjectId.isValid(id)) {
+      throw new Error("ID inválido");
+    }
+    const objectId = new ObjectId(id);
+    const user = await this.users.findOne({ _id: objectId });
+    
     if (!user) {
       return res.status(404).json({ message: "Usuario não encontrado" });
     }

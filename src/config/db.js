@@ -11,14 +11,10 @@ export const connectDataBase = async () => {
     console.log("Conectando ao banco de dados...");
     console.log("URI:", uri);
     console.log("Client:", client);
-    
     await client.connect();
-  
   } catch (error) {
-  
     console.error("erro:", error);
     process.exit(1);
-  
   }
 };
 
