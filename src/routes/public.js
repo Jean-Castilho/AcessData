@@ -1,11 +1,13 @@
 import express from "express";
 import UsersControllers from "../controllers/UsersControllers .js";
+import ProductsControllers from "../controllers/ProductsControllers.js";
 import Services from "../models/Services.js";
 import { sendCode, verifyCodeSend } from "../controllers/Whatzapp.js";
 
 const router = express.Router();
 
 const usersController = new UsersControllers();
+const productsController = new ProductsControllers();
 
 router.get("/getUserById/:id", async (req, res) => {
   try {
@@ -20,7 +22,7 @@ router.get("/getUserById/:id", async (req, res) => {
 
 router.post("/getUserByEmail", async (req, res) => {
 
-    const { email } = req.body;
+    const email = req.body.email;
     console.log("Buscando usuário por email:", email);
   try {
 
@@ -38,6 +40,17 @@ router.post("/getUserByEmail", async (req, res) => {
     return res.status(500).json({ message: "Erro na requisiçao" });
   }
 });
+
+router.get("/getAllProducts", async (req, res) => {
+
+  try {
+    const products = await productsController.getProducts();
+    return res.status(200).json(products);
+  } catch (error) {
+    return res.status(500).json({ message: "Erro ao obter produtos" });
+  }
+});
+
 
 router.post("/createUser", async (req, res) => {
 
