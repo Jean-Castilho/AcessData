@@ -4,22 +4,43 @@ import { MongoClient, GridFSBucket } from "mongodb";
 dotenv.config();
 
 const uri = process.env.DATABASE_URL;
+
+if (!uri) {
+  throw new Error("A variável de ambiente DATABASE_URL não foi definida no arquivo .env");
+}
+
 const client = new MongoClient(uri);
+
+let db;
+let bucket;
 
 export const connectDataBase = async () => {
   try {
     console.log("Conectando ao banco de dados...");
-    console.log("URI:", uri);
-    console.log("Client:", client);
     await client.connect();
+    console.log("Conexão com o MongoDB estabelecida com sucesso.");
+
+    db = client.db("Lists");
+    bucket = new GridFSBucket(db, { bucketName: "uploads" });
+
   } catch (error) {
-    console.error("erro:", error);
-    process.exit(1);
+    console.error("Erro ao conectar ao banco de dados:", error);
+    throw error;
   }
 };
 
-export const getDataBase = () => client.db("Lists");
+export const getDataBase = () => {
+  if (!db) throw new Error("A conexão com o banco de dados não foi inicializada.");
+  return db;
+};
 
 export const getGridFSBucket = () => {
-  return new GridFSBucket(getDataBase(), { bucketName: "uploads" });
+  if (!bucket) throw new Error("O GridFSBucket não foi inicializado.");
+  return bucket;
+};
+
+// 5. Adicionar uma função para fechar a conexão de forma limpa.
+export const closeDataBase = async () => {
+  await client.close();
+  console.log("Conexão com o banco de dados fechada.");
 };
