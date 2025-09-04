@@ -46,9 +46,12 @@ export default class UsersControllers {
 
     const dataUser = {
       name,
+      profile: "user",
       number: { verified: false, telefone: number, otps: {} },
       email: { verified: false, endereço: email, otps: {} },
       hashedPassword,
+      cart: [],
+      favorites: [],
     };
     return await this.getCollection().insertOne(dataUser);
   }

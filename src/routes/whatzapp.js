@@ -23,4 +23,25 @@ router.post('/verify-code', async (req, res) => {
     }
 });
 
+router.post("/verifyNumber", async (req, res) => {
+  try {
+    const { number } = req.body;
+    const response = await usersController.verifyNumber(number);
+    res.status(200).json({ success: true, message: 'Código de verificação enviado com sucesso.', response });
+  } catch (error) {
+    console.error('Erro ao enviar código de verificação:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post("/verifyCode", async (req, res) => {
+  try {
+    const { number, code } = req.body;
+    const otps = await usersController.verifyCode(number, code);
+    return res.status(200).json({ ...otps, success: true, message: 'Código verificado com sucesso.' });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 export default router;
