@@ -6,7 +6,9 @@ dotenv.config();
 const uri = process.env.DATABASE_URL;
 
 if (!uri) {
-  throw new Error("A variável de ambiente DATABASE_URL não foi definida no arquivo .env");
+  throw new Error(
+    "A variável de ambiente DATABASE_URL não foi definida no arquivo .env",
+  );
 }
 
 const client = new MongoClient(uri);
@@ -22,7 +24,6 @@ export const connectDataBase = async () => {
 
     db = client.db("Lists");
     bucket = new GridFSBucket(db, { bucketName: "uploads" });
-
   } catch (error) {
     console.error("Erro ao conectar ao banco de dados:", error);
     throw error;
@@ -30,7 +31,8 @@ export const connectDataBase = async () => {
 };
 
 export const getDataBase = () => {
-  if (!db) throw new Error("A conexão com o banco de dados não foi inicializada.");
+  if (!db)
+    throw new Error("A conexão com o banco de dados não foi inicializada.");
   return db;
 };
 

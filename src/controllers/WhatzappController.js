@@ -3,14 +3,15 @@ import {
   WHATSAPP_API_URL,
   verifyCode,
   createMessageVerifyCode,
-} from '../config/whatzapp.js';
+} from "../config/whatzapp.js";
 
 export const sendCodeWhatzapp = async (number) => {
-
   if (!WHATSAPP_TOKEN || !WHATSAPP_API_URL) {
-    console.error('Variáveis de ambiente do WhatsApp não configuradas.');
-    throw new Error('A configuração do servidor para envio de mensagens está incompleta.');
-  };
+    console.error("Variáveis de ambiente do WhatsApp não configuradas.");
+    throw new Error(
+      "A configuração do servidor para envio de mensagens está incompleta.",
+    );
+  }
 
   const fetchOptions = createMessageVerifyCode(number);
 
@@ -20,23 +21,22 @@ export const sendCodeWhatzapp = async (number) => {
 
     if (!response.ok) {
       throw new Error(JSON.stringify(data.error));
-    }else{
+    } else {
       data.success = true;
     }
-
-    return data
-
+    return data;
   } catch (error) {
-    console.error('Erro ao enviar mensagem:', error);
-    throw new Error('Erro ao enviar mensagem');
+    console.error("Erro ao enviar mensagem:", error);
+    throw new Error("Erro ao enviar mensagem");
   }
-}
+};
 
 export const verifyCodeSend = async (number, code) => {
   const codeVerify = await verifyCode(number, code);
-
-  console.log(codeVerify);
-  
-  return codeVerify || { success: false, message: 'Código não encontrado ou inválido.' };
-
+  return (
+    codeVerify || {
+      success: false,
+      message: "Código não encontrado ou inválido.",
+    }
+  );
 };

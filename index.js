@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import Server from "./src/Server.js";
 import { connectDataBase, closeDataBase } from "./src/config/db.js";
+import handleErrors from "./src/middleware/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 3300;
@@ -12,8 +13,22 @@ app.use(express.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware para capturar JSON malformado parse errors do body-parser/express
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    console.error("JSON inválido recebido:", err.message);
+    return res
+      .status(400)
+      .json({ success: false, message: "JSON inválido na requisição" });
+  }
+  return next(err);
+});
+
 // Configuração das rotas da aplicação
 Server(app);
+
+// Middleware de tratamento de erros (deve ser o último)
+app.use(handleErrors);
 
 // Função para iniciar o servidor de forma controlada
 const start = async () => {
@@ -26,7 +41,10 @@ const start = async () => {
       console.log(`Servidor rodando: http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("Falha ao iniciar a aplicação. O servidor não será iniciado.", error);
+    console.error(
+      "Falha ao iniciar a aplicação. O servidor não será iniciado.",
+      error,
+    );
     process.exit(1);
   }
 };
