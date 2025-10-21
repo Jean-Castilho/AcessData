@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { getDataBase } from "./db.js";
+import { generateOTP, armazenCodeOtp } from "../services/responseService.js";
 
 dotenv.config();
 
@@ -8,21 +8,6 @@ export const WHATSAPP_TOKEN =
 export const WHATSAPP_PHONE_NUMBER_ID = "740443629145374";
 export const WHATSAPP_API_URL = `https://graph.facebook.com/v20.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
 
-function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-export const verifyCode = async (number, code) => {
-  const otps = await getDataBase()
-    .collection("otps-code")
-    .find({ number })
-    .toArray();
-  return otps.find((otp) => otp.code === code) || null;
-};
-
-export const armazenCodeOtp = async (number, code) => {
-  await getDataBase().collection("otps-code").insertOne({ number, code });
-};
 
 export const createMessageVerifyCode = async (to) => {
   const otp = generateOTP();
@@ -68,4 +53,5 @@ export const createMessageVerifyCode = async (to) => {
   };
 
   return fetchOptions;
+
 };

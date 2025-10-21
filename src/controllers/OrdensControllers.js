@@ -60,7 +60,7 @@ export default class OrdersControllers {
 
     console.log("Valor total do pedido:", valor);
 
-    const payment = await fetch("http://localhost:3001/gerar-pix", {
+    const payment = await fetch("paymant/gerar-pix", {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',

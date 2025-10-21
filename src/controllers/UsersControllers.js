@@ -154,6 +154,9 @@ export default class UsersControllers {
     return { token, user: dataUser };
   }
 
+
+  
+
   async verifyNumber(number) {
     if (!number) {
       throw new ValidationError("Número de telefone não fornecido.");
@@ -169,18 +172,21 @@ export default class UsersControllers {
     throw new UnauthorizedError("Código incorreto.");
   }
 
-  async addToFavorites(userId, productId) {
-    if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
-    if (!ObjectId.isValid(productId)) throw new ValidationError("ID de produto inválido.");
 
-    const user = await this.getUserById(userId);
-    const product = await productsController.getProductById(productId);
+
+
+
+  async addToFavorites(userId, id) {
+    if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
+    if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
+
+    const product = await productsController.getProductById(id);
     if (!product) {
       throw new NotFoundError("Produto não encontrado.");
     }
     const result = await this.getCollection().updateOne(
       { _id: new ObjectId(userId) },
-      { $addToSet: { favorites: new ObjectId(productId) } },
+      { $addToSet: { favorites: new ObjectId(id) } },
     );
 
     if (result.modifiedCount === 0) {
@@ -190,16 +196,16 @@ export default class UsersControllers {
     return updatedUser;
   }
 
-  async removeFromFavorites(userId, productId) {
+  async removeFromFavorites(userId, id) {
     if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
-    if (!ObjectId.isValid(productId)) throw new ValidationError("ID de produto inválido.");
+    if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
 
     // Primeiro, verifica se o usuário existe
     await this.getUserById(userId);
 
     const result = await this.getCollection().updateOne(
       { _id: new ObjectId(userId) },
-      { $pull: { favorites: new ObjectId(productId) } },
+      { $pull: { favorites: new ObjectId(id) } },
     );
 
     if (result.modifiedCount === 0) {
@@ -209,19 +215,19 @@ export default class UsersControllers {
     return await this.getUserById(userId);
   }
 
-  async addToCarrinho(userId, productId) {
+  async addToCarrinho(userId, id) {
     if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
-    if (!ObjectId.isValid(productId)) throw new ValidationError("ID de produto inválido.");
+    if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
 
     await this.getUserById(userId);
-    const product = await productsController.getProductById(productId);
+    const product = await productsController.getProductById(id);
     if (!product || product.length === 0) {
       throw new NotFoundError("Produto não encontrado.");
     }
 
     const result = await this.getCollection().updateOne(
       { _id: new ObjectId(userId) },
-      { $addToSet: { cart: new ObjectId(productId) } },
+      { $addToSet: { cart: new ObjectId(id) } },
     );
 
     if (result.modifiedCount === 0) {
@@ -232,10 +238,10 @@ export default class UsersControllers {
     return updatedUser;
   }
 
-  async removeFromCarrinho(userId, productId) {
+  async removeFromCarrinho(userId, id) {
     try {
       const userIdStr = String(userId).trim();
-      const productIdStr = String(productId).trim();
+      const productIdStr = String(id).trim();
 
       if (!ObjectId.isValid(userIdStr)) throw new ValidationError("ID de usuário inválido.");
       if (!productIdStr) throw new ValidationError("ID de produto inválido.");

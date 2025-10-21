@@ -1,9 +1,11 @@
 import {
   WHATSAPP_TOKEN,
   WHATSAPP_API_URL,
-  verifyCode,
   createMessageVerifyCode,
 } from "../config/whatzapp.js";
+
+import { verifyCode } from "../services/responseService.js";
+
 
 export const sendCodeWhatzapp = async (number) => {
   if (!WHATSAPP_TOKEN || !WHATSAPP_API_URL) {

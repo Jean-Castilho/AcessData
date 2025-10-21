@@ -101,8 +101,8 @@ router.post("/ProductsFavorit", async (req, res) => {
 
 router.post("/addFavoritos", async (req, res, next) => {
   try {
-    const { userId, productId } = req.body;
-    const result = await usersController.addToFavorites(userId, productId);
+    const { userId, id } = req.body;
+    const result = await usersController.addToFavorites(userId, id);
     return sendSuccess(
       res,
       { updatedUser: result },
@@ -115,10 +115,10 @@ router.post("/addFavoritos", async (req, res, next) => {
 
 router.post("/removeFavoritos", async (req, res, next) => {
   try {
-    const { userId, productId } = req.body;
+    const { userId, id } = req.body;
     const updatedUser = await usersController.removeFromFavorites(
       userId,
-      productId,
+      id,
     );
     return sendSuccess(res, updatedUser, "Produto removido dos favoritos");
   } catch (error) {
@@ -151,8 +151,8 @@ router.post("/productsCart", async (req, res) => {
 
 router.post("/addCarrinho", async (req, res, next) => {
   try {
-    const { userId, productId } = req.body;
-    const result = await usersController.addToCarrinho(userId, productId);
+    const { userId, id } = req.body;
+    const result = await usersController.addToCarrinho(userId, id);
     return sendSuccess(
       res,
       { updatedUser: result },
@@ -165,10 +165,13 @@ router.post("/addCarrinho", async (req, res, next) => {
 
 router.post("/removeCarrinho", async (req, res, next) => {
   try {
-    const { userId, productId } = req.body;
+    const { userId, id } = req.body;
+
+    console.log("Removendo do carrinho:", { userId, id });
+
     const updatedUser = await usersController.removeFromCarrinho(
       userId,
-      productId,
+      id,
     );
 
     return sendSuccess(res, updatedUser, "Produto removido do carrinho");
