@@ -88,6 +88,8 @@ router.post("/ProductsFavorit", async (req, res) => {
       return sendNotFound(res, "Nenhum produto favorito encontrado.");
     }
 
+    
+
     return sendSuccess(
       res,
       products,
