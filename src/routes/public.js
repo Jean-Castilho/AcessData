@@ -169,8 +169,6 @@ router.post("/removeCarrinho", async (req, res, next) => {
   try {
     const { userId, id } = req.body;
 
-    console.log("Removendo do carrinho:", { userId, id });
-
     const updatedUser = await usersController.removeFromCarrinho(
       userId,
       id,

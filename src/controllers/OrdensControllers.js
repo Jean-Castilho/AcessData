@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getDataBase } from "../config/db.js";
 import ProductsControllers from "./ProductsController.js";
+import { gerarPix, consultarPix } from "./Paymantcontrollet.js";
 import UsersControllers from "./UsersControllers.js";
 import { ValidationError, NotFoundError } from "../errors/customErrors.js";
 
@@ -9,14 +10,34 @@ const usersController = new UsersControllers();
 
 export default class OrdersControllers {
   constructor() { }
-
   getCollection() {
     const db = getDataBase();
     return db.collection("orders");
   }
-
   async getOrdersAll() {
     return await this.getCollection().find().toArray();
+  }
+
+  
+  
+  async getordersByDelivered() {
+    
+    const approved = await this.getCollection().find({ status: "approved"}).toArray();
+    const shipped = await this.getCollection().find({ status: "shipped"}).toArray();
+
+    return [...shipped,...approved];
+
+  }
+
+
+
+  async getOrdersById(id) {
+    if (!ObjectId.isValid(id)) {
+      throw new ValidationError("ID de pedido inválido.");
+    }
+
+    const order = await this.getCollection().findOne({ _id: new ObjectId(id) });
+    return order;
   }
 
   async getOrders(userId) {
@@ -31,7 +52,44 @@ export default class OrdersControllers {
       .sort({ createdAt: -1 })
       .toArray();
 
-    return orders;
+    // Itera sobre os pedidos para atualizar o status de pagamento;
+    await Promise.all(orders.map(async (order) => {
+      
+      if (order.paymentMethod && order.paymentMethod.payment && order.paymentMethod.payment.id) {
+        
+        try {
+          
+          const paymentDetails = await consultarPix(order.paymentMethod.payment.id);
+          
+          if (paymentDetails && paymentDetails.status && order.paymentMethod.payment.status !== paymentDetails.status) {
+
+            const newStatus = paymentDetails.status;
+
+            // Atualiza o status no banco de dados;
+            await this.getCollection().updateOne(
+              { _id: order._id },
+              { $set: { "paymentMethod.payment.status": newStatus, "status": newStatus, "updatedAt": new Date() } }
+            );
+            // Atualiza o status no objeto do pedido;
+            order.paymentMethod.payment.status = newStatus;
+            order.status = newStatus;
+            order.updatedAt = new Date();
+
+          }
+        } catch (error) {
+          console.error(`Erro ao atualizar status do pedido ${order._id}:`, error);
+        }
+      }
+    }));
+
+    const ordersPending = orders.filter(order => order.status === "pending");
+    const ordersShipped = orders.filter(order => order.status === "shipped");
+    const ordersApprovad = orders.filter(order => order.status === "approved");
+    const ordersDelivered = orders.filter(order => order.status === "delivered");
+    const ordersCanceled = orders.filter(order => order.status === "canceled");
+  
+    return [...ordersPending, ...ordersShipped, ...ordersApprovad, ...ordersDelivered, ...ordersCanceled]
+    
   }
 
   async createOrders(payload) {
@@ -50,27 +108,15 @@ export default class OrdersControllers {
     const ids = processedItems.map(item => item.productId.toString())
     const resProduct = await productsController.getProductsByIds(ids);
 
-    console.log("Produtos encontrados:", resProduct);
-
     const valor = resProduct
       .map(produto => produto.preco)
       .reduce((acumulador, precoAtual) => {
         return acumulador + (parseFloat(precoAtual) || 0);
       }, 0);
 
-    console.log("Valor total do pedido:", valor);
+    const payment = await gerarPix(valor);
 
-    const payment = await fetch("paymant/gerar-pix", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ valor })
-    })
-
-    const resAPI = await payment.json()
-
-    paymentMethod.payment = resAPI;
+    paymentMethod.payment = payment;
 
     const dataOrders = {
       user,
@@ -78,24 +124,22 @@ export default class OrdersControllers {
       endereco,
       valor,
       paymentMethod,
-      status: "pendente",
+      status: "pending",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
-    console.log("orders:", dataOrders);
 
     await this.getCollection().insertOne(dataOrders);
 
     return dataOrders;
   }
 
-  async solicitarPagamento(orderId) {
-    if (!ObjectId.isValid(orderId)) {
+  async solicitarPagamento(id) {
+    if (!ObjectId.isValid(id)) {
       throw new ValidationError("ID de pedido inválido.");
     }
 
-    const order = await this.getOrders(orderId);
+    const order = await this.getOrdersById(id);
 
     if (!order) {
       throw new NotFoundError("Pedido não encontrado.");
@@ -108,7 +152,7 @@ export default class OrdersControllers {
     }
 
     const result = await this.getCollection().updateOne(
-      { _id: new ObjectId(orderId) },
+      { _id: new ObjectId(id) },
       { $set: { status: "aguardando_pagamento", updatedAt: new Date() } },
     )
 
@@ -117,7 +161,7 @@ export default class OrdersControllers {
       throw new Error("Não foi possível atualizar o status do pedido.");
     }
 
-    return await this.getOrders(orderId);
+    return await this.getOrdersById(id);
   }
 
   async addToOrdersToUser(userId, productId) {
@@ -150,8 +194,28 @@ export default class OrdersControllers {
       throw new ValidationError("Produto já está no carrinho.");
     }
 
-    console.log(result);
     return await usersController.getUserById(userId);
   }
 
-}
+  async updateStatus(orderId) {
+
+    if (!ObjectId.isValid(orderId)) {
+      throw new ValidationError("ID de pedido inválido.");
+    }
+
+    const order = await this.getOrdersById(orderId);
+
+    order.status = "shipped";
+
+    const result = await this.getCollection().updateOne({ _id: new ObjectId(orderId) }, { $set: order });
+
+    if (result.modifiedCount === 0) {
+
+      throw new ValidationError("Não foi possível atualizar o status do pedido.");
+    }
+
+    return await this.getOrdersById(orderId);
+
+    }
+
+  }
