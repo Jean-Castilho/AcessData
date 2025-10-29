@@ -43,22 +43,3 @@ export const sendBadRequest = (res, message = "Requisição inválida") => {
     message,
   });
 };
-
-export const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-import { getDataBase } from "../config/db.js";
-
-export const verifyCode = async (params, code) => {
-  const otps = await getDataBase()
-    .collection("otps-code")
-    .find({ params })
-    .toArray();
-
-  return otps.find((otp) => otp.code === String(code)) || null;
-};
-
-export const armazenCodeOtp = async (params, code) => {
-  await getDataBase().collection("otps-code").insertOne({ params, code });
-};

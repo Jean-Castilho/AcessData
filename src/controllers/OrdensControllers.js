@@ -18,8 +18,6 @@ export default class OrdersControllers {
     return await this.getCollection().find().toArray();
   }
 
-  
-  
   async getordersByDelivered() {
     
     const approved = await this.getCollection().find({ status: "approved"}).toArray();
@@ -28,8 +26,6 @@ export default class OrdersControllers {
     return [...shipped,...approved];
 
   }
-
-
 
   async getOrdersById(id) {
     if (!ObjectId.isValid(id)) {

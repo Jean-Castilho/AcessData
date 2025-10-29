@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { Router } from "express";
 import UsersControllers from "../controllers/UsersControllers.js";
-import { generateOTP, verifyCode, armazenCodeOtp } from "../services/responseService.js";
+import { generateOTP, verifyCode, armazenCodeOtp } from "../services/otpCodeService.js";
 
 dotenv.config();
 

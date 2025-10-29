@@ -2,7 +2,6 @@ import { ObjectId } from "mongodb";
 import { getDataBase } from "../config/db.js";
 import { validateData } from "../services/validationService.js";
 import { criarToken, criarHashPass, compararSenha } from "../config/auth.js";
-import { sendCodeWhatzapp, verifyCodeSend } from "./WhatzappController.js";
 import ProductsControllers from "./ProductsController.js";
 import {
   ValidationError,
@@ -156,23 +155,6 @@ export default class UsersControllers {
 
 
   
-
-  async verifyNumber(number) {
-    if (!number) {
-      throw new ValidationError("Número de telefone não fornecido.");
-    }
-    return await sendCodeWhatzapp(number);
-  }
-
-  async verifyCode(number, code) {
-    const otps = await verifyCodeSend(number, code);
-    if (code === otps.code) {
-      return otps;
-    }
-    throw new UnauthorizedError("Código incorreto.");
-  }
-
-
 
 
 
