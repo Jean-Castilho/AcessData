@@ -23,6 +23,10 @@ export default class UsersControllers {
     return db.collection("users");
   }
 
+  getUsersAll() {
+    return this.getCollection().find().toArray();
+  }
+
   async getUserById(id) {
     if (!ObjectId.isValid(id)) {
       throw new ValidationError("ID de usuário inválido");

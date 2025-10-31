@@ -12,6 +12,17 @@ const router = express.Router();
 const usersController = new UsersControllers();
 const productsController = new ProductsControllers();
 
+
+router.get('/users', async (req,res) => {
+  try {
+    const users = await usersController.getUsers();
+    return sendSuccess(res, users);
+  } catch (error) {
+    next(error);
+  }
+
+})
+
 router.get("/getUserById/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
