@@ -16,7 +16,6 @@ export default class UsersControllers {
     // A conexão com o banco será obtida sob demanda dentro de cada método,
     //  para garantir que a conexão já foi estabelecida pelo index.js.
   }
-
   // Método auxiliar para obter a coleção de usuários sob demanda
   getCollection() {
     const db = getDataBase();

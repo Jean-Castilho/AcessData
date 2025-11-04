@@ -130,6 +130,13 @@ export default class OrdersControllers {
     return dataOrders;
   }
 
+
+
+
+
+
+  
+
   async solicitarPagamento(id) {
     if (!ObjectId.isValid(id)) {
       throw new ValidationError("ID de pedido inválido.");
@@ -141,7 +148,7 @@ export default class OrdersControllers {
       throw new NotFoundError("Pedido não encontrado.");
     }
 
-    if (order.status !== "pendente") {
+    if (order.status !== "pending") {
       throw new ValidationError(
         `Não é possível solicitar pagamento para um pedido com status '${order.status}'.`,
       );
@@ -159,6 +166,10 @@ export default class OrdersControllers {
 
     return await this.getOrdersById(id);
   }
+
+
+
+
 
   async addToOrdersToUser(userId, productId) {
     if (!ObjectId.isValid(userId)) {
