@@ -75,4 +75,15 @@ router.put("/:id/status", async (req, res, next) => {
   }
 });
 
+router.put("/:id/cancel", async (req, res, next) => {
+  const orderId = req.params.id;
+
+  try {
+    const updatedOrder = await ordersController.cancelOrder(orderId);
+    return sendSuccess(res, updatedOrder, "Pedido cancelado com sucesso");
+  } catch (error) {
+    next(error);
+  }
+})
+
 export default router;

@@ -19,20 +19,21 @@ export default class OrdersControllers {
   }
 
   async getordersByDelivered() {
-    
-    const approved = await this.getCollection().find({ status: "approved"}).toArray();
-    const shipped = await this.getCollection().find({ status: "shipped"}).toArray();
 
-    return [...shipped,...approved];
+    const approved = await this.getCollection().find({ status: "approved" }).toArray();
+    const shipped = await this.getCollection().find({ status: "shipped" }).toArray();
+
+    return [...shipped, ...approved];
 
   }
 
-  async getOrdersById(id) {
+  async getOrderById(id) {
     if (!ObjectId.isValid(id)) {
       throw new ValidationError("ID de pedido inválido.");
     }
 
     const order = await this.getCollection().findOne({ _id: new ObjectId(id) });
+
     return order;
   }
 
@@ -50,13 +51,13 @@ export default class OrdersControllers {
 
     // Itera sobre os pedidos para atualizar o status de pagamento;
     await Promise.all(orders.map(async (order) => {
-      
+
       if (order.paymentMethod && order.paymentMethod.payment && order.paymentMethod.payment.id) {
-        
+
         try {
-          
+
           const paymentDetails = await consultarPix(order.paymentMethod.payment.id);
-          
+
           if (paymentDetails && paymentDetails.status && order.paymentMethod.payment.status !== paymentDetails.status) {
 
             const newStatus = paymentDetails.status;
@@ -71,6 +72,12 @@ export default class OrdersControllers {
             order.status = newStatus;
             order.updatedAt = new Date();
 
+            return await this.getCollection()
+            .find({ "user.id": userId })
+            .sort({ createdAt: -1 })
+            .toArray();
+
+
           }
         } catch (error) {
           console.error(`Erro ao atualizar status do pedido ${order._id}:`, error);
@@ -82,10 +89,10 @@ export default class OrdersControllers {
     const ordersShipped = orders.filter(order => order.status === "shipped");
     const ordersApprovad = orders.filter(order => order.status === "approved");
     const ordersDelivered = orders.filter(order => order.status === "delivered");
-    const ordersCanceled = orders.filter(order => order.status === "canceled");
-  
+    const ordersCanceled = orders.filter(order => order.status === "cancelled");
+
     return [...ordersPending, ...ordersShipped, ...ordersApprovad, ...ordersDelivered, ...ordersCanceled]
-    
+
   }
 
   async createOrders(payload) {
@@ -128,27 +135,21 @@ export default class OrdersControllers {
     await this.getCollection().insertOne(dataOrders);
 
     return dataOrders;
+
   }
-
-
-
-
-
-
-  
 
   async solicitarPagamento(id) {
     if (!ObjectId.isValid(id)) {
       throw new ValidationError("ID de pedido inválido.");
     }
 
-    const order = await this.getOrdersById(id);
+    const order = await this.getOrderById(id);
 
     if (!order) {
       throw new NotFoundError("Pedido não encontrado.");
     }
 
-    if (order.status !== "pending") {
+    if (order.paymentMethod.payment.status !== "pending") {
       throw new ValidationError(
         `Não é possível solicitar pagamento para um pedido com status '${order.status}'.`,
       );
@@ -156,7 +157,7 @@ export default class OrdersControllers {
 
     const result = await this.getCollection().updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status: "aguardando_pagamento", updatedAt: new Date() } },
+      { $set: { status: "pending", updatedAt: new Date() } },
     )
 
     if (result.modifiedCount === 0) {
@@ -164,12 +165,8 @@ export default class OrdersControllers {
       throw new Error("Não foi possível atualizar o status do pedido.");
     }
 
-    return await this.getOrdersById(id);
+    return await this.getOrderById(id);
   }
-
-
-
-
 
   async addToOrdersToUser(userId, productId) {
     if (!ObjectId.isValid(userId)) {
@@ -210,7 +207,7 @@ export default class OrdersControllers {
       throw new ValidationError("ID de pedido inválido.");
     }
 
-    const order = await this.getOrdersById(orderId);
+    const order = await this.getOrderById(orderId);
 
     order.status = "shipped";
 
@@ -221,8 +218,27 @@ export default class OrdersControllers {
       throw new ValidationError("Não foi possível atualizar o status do pedido.");
     }
 
-    return await this.getOrdersById(orderId);
-
-    }
+    return await this.getOrderById(orderId);
 
   }
+
+  async cancelOrder(orderId) {
+
+    if (!ObjectId.isValid(orderId)) {
+      throw new ValidationError("ID de pedido inválido.");
+    }
+
+    const order = await this.getOrderById(orderId);
+
+    order.status = "cancelled";
+
+    const result = await this.getCollection().updateOne({ _id: new ObjectId(orderId) }, { $set: order });
+
+    if (result.modifiedCout === 0) {
+      throw new ValidationError("Não foi possível cancelar o pedido.");
+    }
+
+    return await this.getOrderById(orderId);
+  
+  }
+}

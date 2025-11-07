@@ -156,11 +156,6 @@ export default class UsersControllers {
     return { token, user: dataUser };
   }
 
-
-  
-
-
-
   async addToFavorites(userId, id) {
     if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
     if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
