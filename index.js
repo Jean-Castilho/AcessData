@@ -24,9 +24,6 @@ app.use((err, req, res, next) => {
   return next(err);
 });
 
-// Configuração das rotas da aplicação
-Server(app);
-
 // Middleware de tratamento de erros (deve ser o último)
 app.use(handleErrors);
 
@@ -57,3 +54,6 @@ process.on("SIGINT", async () => {
 
 // Inicia a aplicação
 start();
+
+// Configuração das rotas da aplicação
+Server(app);

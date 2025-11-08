@@ -157,42 +157,60 @@ export default class UsersControllers {
   }
 
   async addToFavorites(userId, id) {
-    if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
-    if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
+    const userIdStr = String(userId).trim();
+    const productIdStr = String(id).trim();
 
-    const product = await productsController.getProductById(id);
+    if (!ObjectId.isValid(userIdStr)) throw new ValidationError("ID de usuário inválido.");
+    if (!ObjectId.isValid(productIdStr)) throw new ValidationError("ID de produto inválido.");
+
+    const product = await productsController.getProductById(productIdStr);
     if (!product) {
       throw new NotFoundError("Produto não encontrado.");
     }
+    
+    const objectIdVersion = new ObjectId(productIdStr);
+
     const result = await this.getCollection().updateOne(
-      { _id: new ObjectId(userId) },
-      { $addToSet: { favorites: new ObjectId(id) } },
+      { 
+        _id: new ObjectId(userIdStr),
+        favorites: { $nin: [productIdStr, objectIdVersion] }
+      },
+      { $push: { favorites: objectIdVersion } },
     );
 
     if (result.modifiedCount === 0) {
+      await this.getUserById(userIdStr); // throws if user not found
       throw new ValidationError("Produto já está nos favoritos.");
     }
-    const updatedUser = await this.getUserById(userId);
+    const updatedUser = await this.getUserById(userIdStr);
     return updatedUser;
   }
 
   async removeFromFavorites(userId, id) {
-    if (!ObjectId.isValid(userId)) throw new ValidationError("ID de usuário inválido.");
-    if (!ObjectId.isValid(id)) throw new ValidationError("ID de produto inválido.");
+    const userIdStr = String(userId).trim();
+    const productIdStr = String(id).trim();
+
+    if (!ObjectId.isValid(userIdStr)) throw new ValidationError("ID de usuário inválido.");
+    if (!productIdStr) throw new ValidationError("ID de produto inválido.");
 
     // Primeiro, verifica se o usuário existe
-    await this.getUserById(userId);
+    await this.getUserById(userIdStr);
+
+    const pullValues = [productIdStr];
+    if (ObjectId.isValid(productIdStr)) {
+        pullValues.push(new ObjectId(productIdStr));
+    }
 
     const result = await this.getCollection().updateOne(
-      { _id: new ObjectId(userId) },
-      { $pull: { favorites: new ObjectId(id) } },
+      { _id: new ObjectId(userIdStr) },
+      { $pull: { favorites: { $in: pullValues } } },
     );
 
     if (result.modifiedCount === 0) {
       throw new NotFoundError("Produto não encontrado nos favoritos.");
     }
 
-    return await this.getUserById(userId);
+    return await this.getUserById(userIdStr);
   }
 
   async addToCarrinho(userId, id) {
@@ -207,7 +225,7 @@ export default class UsersControllers {
 
     const result = await this.getCollection().updateOne(
       { _id: new ObjectId(userId) },
-      { $addToSet: { cart: new ObjectId(id) } },
+      { $addToSet: { cart: id } },
     );
 
     if (result.modifiedCount === 0) {
