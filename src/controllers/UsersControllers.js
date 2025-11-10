@@ -57,9 +57,12 @@ export default class UsersControllers {
       name,
       hashedPassword,
       role: "user",
-      pedidos: [],
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       telefone: { verified: false, number: number, otps: {} },
       email: { verified: false, endereco: normalizedEmail, otps: {} },
+      pedidos: [],
       cart: [],
       favorites: [],
     };

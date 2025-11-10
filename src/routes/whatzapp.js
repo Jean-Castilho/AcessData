@@ -1,8 +1,13 @@
 import express from "express";
 import {
   sendCodeWhatzapp,
+  updatStatusOrder
 } from "../controllers/WhatzappController.js";
 import { verifyCode } from "../services/otpCodeService.js";
+
+
+
+
 
 const router = express.Router();
 
@@ -15,6 +20,21 @@ router.post("/send-code", async (req, res) => {
     return res.status(500).json({ success: false, error: error.message });
   }
 });
+
+router.post("/send-code/deliveryd", async (req, res) => {
+  const { number } = req.body;
+  try {
+
+    const result = await sendCodeWhatzapp(number);
+
+    const statusDeliveridOrder = await updatStatusOrder(number);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 router.post("/verifyCode", async (req, res) => {
   try {

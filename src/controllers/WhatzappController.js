@@ -68,7 +68,7 @@ export const sendCodeWhatzapp = async (number) => {
 
   try {
     const response = await fetch(WHATSAPP_API_URL, fetchOptions);
-    const data = await response.json();
+    const data = await response.json();  
 
     return data;
 
@@ -77,3 +77,15 @@ export const sendCodeWhatzapp = async (number) => {
     throw new Error("Erro ao enviar mensagem");
   }
 };
+
+
+
+export const updatStatusOrder = async (number) => {
+  
+
+
+
+
+
+
+
