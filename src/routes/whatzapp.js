@@ -1,7 +1,6 @@
 import express from "express";
 import {
-  sendCodeWhatzapp,
-  updatStatusOrder
+  sendCodeWhatzapp
 } from "../controllers/WhatzappController.js";
 import { verifyCode } from "../services/otpCodeService.js";
 

@@ -77,15 +77,3 @@ export const sendCodeWhatzapp = async (number) => {
     throw new Error("Erro ao enviar mensagem");
   }
 };
-
-
-
-export const updatStatusOrder = async (number) => {
-  
-
-
-
-
-
-
-

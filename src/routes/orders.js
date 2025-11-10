@@ -17,6 +17,19 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+router.get("/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const order = await ordersController.getOrderById(id);
+    if (!order) {
+      return sendError(res, "Pedido não encontrado");
+    }
+    return sendSuccess(res, order);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/cosultar-pix/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
