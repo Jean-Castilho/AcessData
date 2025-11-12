@@ -67,7 +67,7 @@ router.patch("/:id/payment", async (req, res, next) => {
   }
 });
 
-router.get("/:userId", async (req, res, next) => {
+router.get("/:userId/pedido", async (req, res, next) => {
   try {
     const { userId } = req.params;
     const orders = await ordersController.getOrders(userId);

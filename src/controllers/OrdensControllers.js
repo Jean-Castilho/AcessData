@@ -51,37 +51,33 @@ export default class OrdersControllers {
 
     // Itera sobre os pedidos para atualizar o status de pagamento;
     await Promise.all(orders.map(async (order) => {
+      try {
 
-      if (order.paymentMethod && order.paymentMethod.payment && order.paymentMethod.payment.id) {
+        const paymentDetails = await consultarPix(order.paymentMethod.payment.id);
+        
+        if (order.paymentMethod.payment.status !== paymentDetails.status) {
 
-        try {
+          const newStatus = paymentDetails.status;
 
-          const paymentDetails = await consultarPix(order.paymentMethod.payment.id);
+          // Atualiza o status no banco de dados;
+          await this.getCollection().updateOne(
+            { _id: order._id },
+            { $set: { "paymentMethod.payment.status": newStatus, "status": newStatus, "updatedAt": new Date() } }
+          );
+          // Atualiza o status no objeto do pedido;
+          order.paymentMethod.payment.status = newStatus;
+          order.status = newStatus;
+          order.updatedAt = new Date();
 
-          if (paymentDetails && paymentDetails.status && order.paymentMethod.payment.status !== paymentDetails.status) {
-
-            const newStatus = paymentDetails.status;
-
-            // Atualiza o status no banco de dados;
-            await this.getCollection().updateOne(
-              { _id: order._id },
-              { $set: { "paymentMethod.payment.status": newStatus, "status": newStatus, "updatedAt": new Date() } }
-            );
-            // Atualiza o status no objeto do pedido;
-            order.paymentMethod.payment.status = newStatus;
-            order.status = newStatus;
-            order.updatedAt = new Date();
-
-            return await this.getCollection()
+          return await this.getCollection()
             .find({ "user.id": userId })
             .sort({ createdAt: -1 })
             .toArray();
 
 
-          }
-        } catch (error) {
-          console.error(`Erro ao atualizar status do pedido ${order._id}:`, error);
         }
+      } catch (error) {
+        console.error(`Erro ao atualizar status do pedido ${order._id}:`, error);
       }
     }));
 
@@ -149,7 +145,9 @@ export default class OrdersControllers {
       throw new NotFoundError("Pedido não encontrado.");
     }
 
-    if (order.paymentMethod.payment.status !== "pending") {
+    console.log(order);
+
+    if (order.paymentMethod.payment.status == "pending") {
       throw new ValidationError(
         `Não é possível solicitar pagamento para um pedido com status '${order.status}'.`,
       );
@@ -239,6 +237,6 @@ export default class OrdersControllers {
     }
 
     return await this.getOrderById(orderId);
-  
+
   }
 }
