@@ -21,7 +21,7 @@ export default class UsersControllers {
     const db = getDataBase();
     return db.collection("users");
   }
-
+  
   getUsersAll() {
     return this.getCollection().find().toArray();
   }
@@ -48,6 +48,66 @@ export default class UsersControllers {
     if (!email) return null;
     const normalized = String(email).trim().toLowerCase();
     return await this.getCollection().findOne({ "email.endereco": normalized });
+  }
+
+  async login(email, password) {
+
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundError("E-mail ou senha incorretos");
+    }
+
+    const ismatch = await compararSenha(password, user.hashedPassword);
+
+    if (!ismatch) {
+      throw new UnauthorizedError("E-mail ou senha incorretos");
+    }
+
+    // Mantém o campo aninhado como "email.endereço"
+    const token = criarToken({
+      id: user._id,
+      email: user.email?.endereco || "",
+    });
+
+    return { user, token };
+
+  }
+
+  async createUserAndToken(userData) {
+    const { name, number, email, password } = userData;
+
+    if (!name || !number || !email || !password) {
+      throw new ValidationError("Preencha todos os campos");
+    }
+
+    const validation = validateData(name, number, email, password);
+    if (!validation.valid) {
+      throw new ValidationError(validation.message);
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = await this.verifiedUser({ email: normalizedEmail });
+    if (existing) {
+      throw new ValidationError("Este e-mail já está em uso");
+    }
+
+    const hashedPassword = await criarHashPass(password);
+
+    const newUser = await this.createUser({
+      name,
+      number,
+      email,
+      hashedPassword,
+    });
+
+    const token = criarToken({
+      _id: newUser.insertedId,
+      email: normalizedEmail,
+    });
+
+    const dataUser = await this.getUserById(newUser.insertedId);
+
+    return { token, user: dataUser };
   }
 
   async createUser({ name, number, email, hashedPassword }) {
@@ -99,64 +159,6 @@ export default class UsersControllers {
     }
     const objectId = new ObjectId(id);
     return await this.getCollection().deleteOne({ _id: objectId });
-  }
-
-  async login(email, password) {
-    const user = await this.getUserByEmail(email);
-    if (!user) {
-      throw new NotFoundError("E-mail ou senha incorretos");
-    }
-
-    const ismatch = await compararSenha(password, user.hashedPassword);
-
-    if (!ismatch) {
-      throw new UnauthorizedError("E-mail ou senha incorretos");
-    }
-
-    // Mantém o campo aninhado como "email.endereço"
-    const token = criarToken({
-      id: user._id,
-      email: user.email?.endereco || "",
-    });
-
-    return { user, token };
-  }
-
-  async createUserAndToken(userData) {
-    const { name, number, email, password } = userData;
-
-    if (!name || !number || !email || !password) {
-      throw new ValidationError("Preencha todos os campos");
-    }
-
-    const validation = validateData(name, number, email, password);
-    if (!validation.valid) {
-      throw new ValidationError(validation.message);
-    }
-
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const existing = await this.verifiedUser({ email: normalizedEmail });
-    if (existing) {
-      throw new ValidationError("Este e-mail já está em uso");
-    }
-
-    const hashedPassword = await criarHashPass(password);
-
-    const newUser = await this.createUser({
-      name,
-      number,
-      email,
-      hashedPassword,
-    });
-
-    const token = criarToken({
-      _id: newUser.insertedId,
-      email: normalizedEmail,
-    });
-
-    const dataUser = await this.getUserById(newUser.insertedId);
-
-    return { token, user: dataUser };
   }
 
   async addToFavorites(userId, id) {

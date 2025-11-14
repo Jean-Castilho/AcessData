@@ -57,6 +57,7 @@ export default class ProductsControllers {
 
     return product;
   }
+
   async createProduct(productData) {
     const result = await this.getCollection().insertOne(productData);
     return result;
